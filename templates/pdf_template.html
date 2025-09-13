@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Serviço</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 10px;
+                color: #666;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #000;
+        }
+
+        .header {
+            border: 2px solid #000;
+            padding: 12px;
+            margin-bottom: 25px;
+        }
+
+        /* Cabeçalho como tabela */
+        .header-top-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            table-layout: fixed; /* força as colunas a respeitar largura */
+        }
+
+        .header-top-table td {
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 110px; /* largura fixa para logos */
+            text-align: center;
+        }
+
+        .logo-cell img {
+            max-height: 50px;
+            max-width: 100%;
+            display: block;
+            object-fit: contain;
+            margin: 0 auto;
+        }
+
+        .title-cell {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;  /* sem quebra */
+            overflow: hidden;
+            text-overflow: ellipsis; /* corta se muito longo */
+            padding: 0 8px;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .header-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .header-table td.label {
+            background: #f0f0f0;
+            font-weight: bold;
+            width: 20%;
+        }
+
+        .section {
+            border: 1px solid #000;
+            margin-top: 25px;
+            padding: 12px;
+            page-break-inside: avoid;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            background: #f0f0f0;
+            padding: 6px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .text-area {
+            min-height: 60px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            background: #fff;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 6px;
+        }
+
+        .repair-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .repair-table td, .repair-table th {
+            border: 1px solid #000;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .repair-table th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .photo-item {
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .photo-item img {
+            max-width: 100%;
+            max-height: 220px;
+            border: 1px solid #ccc;
+        }
+
+        .photo-caption {
+            font-size: 10px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .break-page {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <div class="header">
+        <table class="header-top-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="{{ url_for('static', filename='logo_sotreq.jpg') }}" alt="Logo Sotreq">
+                </td>
+                <td class="title-cell">
+                    RNTO - Relatório de Notas Técnicas do Orçamento
+                </td>
+                <td class="logo-cell">
+                    <img src="{{ url_for('static', filename='Cat.png') }}" alt="Logo CAT">
+                </td>
+            </tr>
+        </table>
+
+        <table class="header-table">
+            <tr>
+                <td class="label">Cód./Rev.</td><td>{{ relatorio[1] or 'N/A' }}</td>
+                <td class="label">Nº OS</td><td>{{ relatorio[2] or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Cliente</td><td colspan="3">{{ relatorio[3] or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Data</td><td>{{ relatorio[4] or 'N/A' }}</td>
+                <td class="label">Técnico</td><td>{{ relatorio[5] or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Nível</td><td>{{ relatorio[6] or 'N/A' }}</td>
+                <td class="label">Contato</td><td>{{ relatorio[7] or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Modelo</td><td>{{ relatorio[8] or 'N/A' }}</td>
+                <td class="label">Série</td><td>{{ relatorio[9] or 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Horímetro</td><td colspan="3">{{ relatorio[10] or 'N/A' }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Seção SIMS -->
+    <div class="section">
+        <h3>SIMS / Peça Causadora da Falha</h3>
+        <table class="repair-table">
+            <tr>
+                <th>Nº da Peça</th>
+                <th>Cod. Descrição da Falha</th>
+                <th>Qtd.</th>
+                <th>SMCS Code</th>
+                <th>Grupo Part Number</th>
+                <th>Comentários</th>
+            </tr>
+            <tr>
+                <td>{{ relatorio[16] or 'N/A' }}</td>
+                <td>{{ relatorio[17] or 'N/A' }}</td>
+                <td>{{ relatorio[18] or 'N/A' }}</td>
+                <td>{{ relatorio[19] or 'N/A' }}</td>
+                <td>{{ relatorio[20] or 'N/A' }}</td>
+                <td>{{ relatorio[21] or 'N/A' }}</td>
+            </tr>
+        </table>
+
+        {% if relatorio[11] %}
+        <div style="margin-top: 12px;">
+            <strong>Instruções para execução de serviço:</strong>
+            <div class="text-area">{{ relatorio[11] }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Histórico -->
+    <div class="section">
+        <h3>Histórico do Reparo</h3>
+        {% if relatorio[12] %}
+        <p><strong>Reclamação do Cliente:</strong></p>
+        <div class="text-area">{{ relatorio[12] }}</div>
+        {% endif %}
+
+        {% if relatorio[13] %}
+        <p><strong>Causa das Falhas:</strong></p>
+        <div class="text-area">{{ relatorio[13] }}</div>
+        {% endif %}
+
+        {% if relatorio[14] %}
+        <p><strong>Dano Resultante:</strong></p>
+        <div class="text-area">{{ relatorio[14] }}</div>
+        {% endif %}
+
+        {% if relatorio[15] %}
+        <p><strong>Comentários sobre o Processo de Reparo:</strong></p>
+        <div class="text-area">{{ relatorio[15] }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Fotos -->
+    <div class="section break-page">
+        <h3>Fotos do Serviço</h3>
+        {% if fotos and fotos|length > 0 %}
+        <div class="photo-gallery">
+            {% for foto in fotos %}
+            <div class="photo-item">
+                <img src="{{ url_for('uploads', filename=foto[2]) }}" alt="Foto do serviço">
+                <div class="photo-caption">{{ foto[4] or ('Foto ' ~ loop.index) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:20px; color:#666;">
+            <em>Nenhuma foto foi adicionada a este relatório.</em>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
