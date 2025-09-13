@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if editando %}Editar{% else %}Novo{% endif %} Relatório - RNTO</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
+
+      body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          background: linear-gradient(135deg, #f1c40f 0%, #2c3e50 100%); /* amarelo → preto */
+          min-height: 100vh;
+          padding: 20px;
+      }
+
+      .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          background: #fff;
+          border-radius: 20px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+          overflow: hidden;
+      }
+
+      .header {
+          background: linear-gradient(135deg, #000 0%, #333 100%); /* preto → cinza escuro */
+          color: #f1c40f;
+          padding: 30px;
+          text-align: center;
+      }
+
+      .header h1 {
+          font-size: 2.2em;
+          margin-bottom: 10px;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+      }
+
+      .logo-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+      }
+
+      .logo-container img {
+          height: 60px;
+      }
+
+      .form-container {
+          padding: 40px;
+      }
+
+      .form-section {
+          background: #f7f7f7;
+          border-radius: 15px;
+          padding: 25px;
+          margin-bottom: 30px;
+          border-left: 5px solid #f1c40f; /* amarelo destaque */
+      }
+
+      .form-section h3 {
+          color: #2c3e50;
+          margin-bottom: 20px;
+          font-size: 1.3em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+
+      .form-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          margin-bottom: 20px;
+      }
+
+      .form-group {
+          display: flex;
+          flex-direction: column;
+      }
+
+      .form-group label {
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 8px;
+          font-size: 0.9em;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+          padding: 12px 15px;
+          border: 2px solid #ccc;
+          border-radius: 10px;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          background: #fff;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+          outline: none;
+          border-color: #f1c40f;
+          box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.2);
+          transform: translateY(-1px);
+      }
+
+      .form-group textarea {
+          resize: vertical;
+          min-height: 80px;
+      }
+
+      /* Tabela SIMS */
+      .table-container {
+          overflow-x: auto;
+          margin: 20px 0;
+      }
+
+      .repair-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+
+      .repair-table th {
+          background: linear-gradient(135deg, #f1c40f 0%);
+          color: black;
+          padding: 15px 10px;
+          font-weight: 600;
+          text-align: left;
+      }
+
+      .repair-table td {
+          padding: 12px 10px;
+          border-bottom: 1px solid #e9ecef;
+      }
+
+      .repair-table input,
+      .repair-table select {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 13px;
+      }
+
+      /* Botões */
+      .actions {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          margin-top: 30px;
+          flex-wrap: wrap;
+      }
+
+      .btn {
+          padding: 12px 30px;
+          border: none;
+          border-radius: 25px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 160px;
+          justify-content: center;
+      }
+
+      .btn-primary {
+          background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+          color: black;
+      }
+
+      .btn-secondary {
+          background: linear-gradient(135deg, #555 0%, #333 100%);
+          color: white;
+      }
+
+      .btn-success {
+          background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+          color: white;
+      }
+
+      .btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      }
+
+      /* Fotos - Seção melhorada */
+      .photo-section {
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border-radius: 15px;
+          padding: 25px;
+          margin-top: 30px;
+          border-left: 5px solid #f1c40f;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      }
+
+      .photo-upload {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+      }
+
+      .upload-area {
+          border: 3px dashed #f1c40f;
+          border-radius: 15px;
+          padding: 40px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: white;
+          width: 100%;
+      }
+
+      .upload-area:hover {
+          background: #fffbea;
+          border-color: #f39c12;
+      }
+
+      .upload-area.dragover {
+          background: #fff9d6;
+          border-color: #f1c40f;
+      }
+
+      .photo-gallery {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
+          margin-top: 20px;
+          width: 100%;
+      }
+
+      .photo-item {
+          position: relative;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+          background: white;
+      }
+
+      .photo-item:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+      }
+
+      .photo-item img {
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+          background: #000;
+      }
+
+      /* Campo de nome da imagem estilizado */
+      .photo-name-container {
+          position: relative;
+          padding: 15px;
+          background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      }
+
+      .photo-name-input {
+          width: 100%;
+          padding: 12px 15px 12px 45px !important;
+          border: 2px solid #e9ecef !important;
+          border-radius: 12px !important;
+          font-size: 14px !important;
+          font-weight: 500;
+          background: #ffffff;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          color: #2c3e50;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .photo-name-input::placeholder {
+          color: #95a5a6;
+          font-weight: 400;
+      }
+
+      .photo-name-input:focus {
+          outline: none !important;
+          border-color: #f1c40f !important;
+          box-shadow: 0 0 0 4px rgba(241, 196, 15, 0.15) !important;
+          background: #fffef7;
+          transform: none !important;
+      }
+
+      .photo-name-input:valid {
+          border-color: #27ae60 !important;
+      }
+
+      .photo-name-icon {
+          position: absolute;
+          left: 27px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #f1c40f;
+          font-size: 16px;
+          z-index: 2;
+          transition: all 0.3s ease;
+      }
+
+      .photo-name-input:focus + .photo-name-icon {
+          color: #f39c12;
+          transform: translateY(-50%) scale(1.1);
+      }
+
+      .photo-name-input:valid + .photo-name-icon {
+          color: #27ae60;
+      }
+
+      .remove-btn {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: linear-gradient(135deg, rgba(231, 76, 60, 0.9) 0%, rgba(192, 57, 43, 0.9) 100%);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          font-weight: bold;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          z-index: 10;
+      }
+
+      .remove-btn:hover {
+          background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+      }
+
+      /* Animação de entrada para fotos */
+      .photo-item {
+          animation: slideInUp 0.4s ease-out forwards;
+          opacity: 0;
+          transform: translateY(20px);
+      }
+
+      @keyframes slideInUp {
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+
+      /* Alerts */
+      .alert {
+          padding: 15px 20px;
+          border-radius: 10px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+
+      .alert-success {
+          background: #fcf8e3;
+          color: #8a6d3b;
+          border: 1px solid #faebcc;
+      }
+
+      .alert-error {
+          background: #f2dede;
+          color: #a94442;
+          border: 1px solid #ebccd1;
+      }
+
+      /* Responsividade */
+      @media (max-width: 768px) {
+          .form-grid {
+              grid-template-columns: 1fr;
+          }
+          
+          .logo-container {
+              flex-direction: column;
+              gap: 15px;
+          }
+          
+          .actions {
+              flex-direction: column;
+              align-items: center;
+          }
+          
+          .btn {
+              width: 100%;
+              max-width: 300px;
+          }
+
+          .photo-gallery {
+              grid-template-columns: 1fr;
+          }
+      }
+
+      /* Loading Spinner */
+      .loading {
+          display: none;
+          justify-content: center;
+          align-items: center;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.6);
+          z-index: 9999;
+      }
+
+      .spinner {
+          width: 50px;
+          height: 50px;
+          border: 5px solid #ccc;
+          border-top: 5px solid #f1c40f;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+</style>
+
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+          <div class="logo-container">
+              <img src="/static/logo_sotreq.jpg" alt="Logo Sotreq">
+              <h1>RNTO - Relatório de Notas Técnicas</h1>
+              <img src="/static/Cat.png" alt="Logo CAT">
+          </div>
+        </div>
+
+        <div class="form-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{% if editando %}/atualizar/{{ relatorio[0] }}{% else %}/salvar{% endif %}" 
+                  method="POST" 
+                  id="reportForm" 
+                  enctype="multipart/form-data">
+                
+                <!-- Informações Básicas -->
+                <div class="form-section">
+                    <h3><i class="fas fa-info-circle"></i> Informações Básicas</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cod_rev">Código/Revisão</label>
+                            <input type="text" id="cod_rev" name="cod_rev" value="{{ relatorio[1] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="num_os">Número da OS *</label>
+                            <input type="text" id="num_os" name="num_os" required value="{{ relatorio[2] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente">Cliente *</label>
+                            <input type="text" id="cliente" name="cliente" required value="{{ relatorio[3] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="data">Data</label>
+                            <input type="date" id="data" name="data" value="{{ relatorio[4] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="tecnico">Nome do Técnico *</label>
+                            <input type="text" id="tecnico" name="tecnico" required value="{{ relatorio[5] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="nivel">Nível</label>
+                            <select id="nivel" name="nivel">
+                                <option value="">Selecione</option>
+                                <option value="Júnior" {% if relatorio and relatorio[6]=='Júnior' %}selected{% endif %}>Júnior</option>
+                                <option value="Pleno" {% if relatorio and relatorio[6]=='Pleno' %}selected{% endif %}>Pleno</option>
+                                <option value="Sênior" {% if relatorio and relatorio[6]=='Sênior' %}selected{% endif %}>Sênior</option>
+                                <option value="Especialista" {% if relatorio and relatorio[6]=='Especialista' %}selected{% endif %}>Especialista</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="supervisor">Supervisor</label>
+                            <input type="text" id="supervisor" name="supervisor" value="{{ relatorio[7] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="modelo">Modelo</label>
+                            <input type="text" id="modelo" name="modelo" value="{{ relatorio[8] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="serie">Série</label>
+                            <input type="text" id="serie" name="serie" value="{{ relatorio[9] if relatorio }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="horimetro">Horímetro</label>
+                            <input type="text" id="horimetro" name="horimetro" value="{{ relatorio[10] if relatorio }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIMS / Peça Causadora -->
+                <div class="form-section">
+                    <h3><i class="fas fa-tools"></i> SIMS / Peça Causadora</h3>
+                    <div class="table-container">
+                        <table class="repair-table">
+                            <thead>
+                                <tr>
+                                    <th>Nº da Peça</th>
+                                    <th>Cod. Descrição da Falha</th>
+                                    <th>Qtd</th>
+                                    <th>SMCS Code</th>
+                                    <th>Grupo Part</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="peca_numero" value="{{ relatorio[16] if relatorio }}"></td>
+                                    <td>
+                                        <select name="falha_codigo">
+                                            <option>00 NÃO FORNECIDO</option>
+                                            <option>01 CORROÍDO/LASCADO</option>
+                                            <option>02 RISCADO/ENTALHADO</option>
+                                            <option>03 ENFERRUJADO/CORROÍDO</option>
+                                            <option>04 PROBLEMA DE METALIZAÇÃO</option>
+                                            <option>05 ÁSPERO OU IRREGULAR</option>
+                                            <option>06 PINTURA INSATISFATÓRIA</option>
+                                            <option>07 TRANSFERÊNCIA DE MATERIAL</option>
+                                            <option>08 ACIDENTE OU ABUSO</option>
+                                            <option>09 CONDENSAÇÃO</option>
+                                            <option>10 QUEBRADO</option>
+                                            <option>11 TRINCADO</option>
+                                            <option>12 EMPENADO OU TORCIDO</option>
+                                            <option>13 DESGASTADO</option>
+                                            <option>14 DOBRADO OU AFUNDADO</option>
+                                            <option>15 ROMPIDO/RASGADO</option>
+                                            <option>16 VAZA AR OU GASES</option>
+                                            <option>17 VAZA ÓLEO OU LUBRIFICANTE</option>
+                                            <option>18 VAZA ÁGUA</option>
+                                            <option>19 VAZA COMBUSTÍVEL</option>
+                                            <option>20 RECLAMAÇÃO ADICIONAL</option>
+                                            <option>21 ROSCAS ESPANADAS</option>
+                                            <option>22 FERRAGEM SOLTA OU FALTANTE</option>
+                                            <option>23 SEPARADO</option>
+                                            <option>24 ESTICADO</option>
+                                            <option>25 CORTADO</option>
+                                            <option>26 MACHUCADO</option>
+                                            <option>27 FALHA DE SOLDA</option>
+                                            <option>28 COMPLT CLA CLAIM</option>
+                                            <option>29 NÍVEL ERRADO DE FLUIDO</option>
+                                            <option>30 FLUIDO ERRADO</option>
+                                            <option>31 EM CURTO-CIRCUITO</option>
+                                            <option>32 CIRCUITO ABERTO</option>
+                                            <option>33 CÉLULA INATIVA</option>
+                                            <option>34 TERMINAL DANIFICADO</option>
+                                            <option>35 SOBRECARGA</option>
+                                            <option>36 BAIXA CARGA</option>
+                                            <option>37 DEFEITO DE SOFTWARE</option>
+                                            <option>38 REGISTRO DE INFORMAÇÃO</option>
+                                            <option>40 REVISÃO MANUAL</option>
+                                            <option>41 FALHA NO TESTE DE CARGA DE PART.</option>
+                                            <option>42 MAU FUNCIONAMENTO DO SISTEMA</option>
+                                            <option>43 HESITAÇÃO</option>
+                                            <option>44 TROCA DE MARCHA IRREGULAR</option>
+                                            <option>45 DIFÍCIL DE ENGATAR</option>
+                                            <option>46 DESCARREGA-SE</option>
+                                            <option>47 FREIA COM DIFICULDADE</option>
+                                            <option>48 DIREÇÃO DIFÍCIL</option>
+                                            <option>49 REPARO GERAL</option>
+                                            <option>50 POLÍTICA/MCEP</option>
+                                            <option>51 AGARRA OU PRENDE</option>
+                                            <option>52 RUIDOSO</option>
+                                            <option>53 SUPERAQUECIMENTO</option>
+                                            <option>54 VIBRA, TREME</option>
+                                            <option>55 FAZ MUITA FUMAÇA</option>
+                                            <option>56 SOLICITAÇÃO DA FÁBRICA</option>
+                                            <option>57 TAMPADO, CONFINADO</option>
+                                            <option>58 SOLTO OU DESLIZANTE</option>
+                                            <option>59 MAU ASSENTAMENTO</option>
+                                            <option>60 IMPOSSÍVEL DE AJUSTAR</option>
+                                            <option>61 SUBSTITUIÇÃO DE COMPONENTE</option>
+                                            <option>62 SUJEIRA OU MATERIAL ESTRANHO</option>
+                                            <option>63 CONSUMO EXCESSIVO DE ÓLEO</option>
+                                            <option>64 FLUTUA</option>
+                                            <option>65 PRESSÃO MUITO ALTA</option>
+                                            <option>66 PRESSÃO MUITO BAIXA</option>
+                                            <option>67 UMEDECE</option>
+                                            <option>68 PRESSÃO EXCESSIVA NO CÁRTER</option>
+                                            <option>69 SEM PRESSÃO</option>
+                                            <option>70 DIFÍCIL DE DAR PARTIDA</option>
+                                            <option>71 TEMPO DE CICLO ERRADO</option>
+                                            <option>72 BAIXA POTÊNCIA</option>
+                                            <option>73 OPERAÇÃO IRREGULAR</option>
+                                            <option>74 M.C.E.P.</option>
+                                            <option>75 COMPONENTE OEM DO TIPO II</option>
+                                            <option>76 EMBALAGEM</option>
+                                            <option>77 EXCESSO DE ROTAÇÃO</option>
+                                            <option>78 DANO DISSIMULADO</option>
+                                            <option>79 INTERFERÊNCIA</option>
+                                            <option>80 DIFÍCIL DE ACESSAR</option>
+                                            <option>81 OPERAÇÃO OMITIDA</option>
+                                            <option>82 PEÇA ERRADA OU FALTANTE</option>
+                                            <option>83 SOLDA INSATISFATÓRIA</option>
+                                            <option>84 MUITO GRANDE OU COMPRIDO</option>
+                                            <option>85 MUITO PEQUENO OU CURTO</option>
+                                            <option>86-QUEBRADICO, MUITO DURO</option>
+                                            <option>87 MUITO MOLE</option>
+                                            <option>88 NÃO REDONDO /FORA DE CENTRO</option>
+                                            <option>89 LUBRIFICANTE INAPROPRIADO</option>
+                                            <option>90 DEFEITO DE FUNDIÇÃO</option>
+                                            <option>91 AJUSTAGEM INAPROPRIADA</option>
+                                            <option>92 USINAGEM DEFICIENTE</option>
+                                            <option>93 MAL POSICIONADO</option>
+                                            <option>94 DANOS DE TRANSPORTE</option>
+                                            <option>95 DANO DE MONTAGEM</option>
+                                            <option>96 PROGRAMA DE SUPORTE AO PRODU</option>
+                                            <option>97 EMISSÕES</option>
+                                            <option>98 RECLAMAÇÃO SUPLEMENTAR</option>
+                                            <option>99 DEFEITO INDEFINIDO</option>
+                                            <option>NS-NÃO FORNECIDO</option>
+                                            <option>RD-DANO RESULTANTE</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="number" min="1" name="falha_qtd" value="{{ relatorio[18] if relatorio }}"></td>
+                                    <td><input type="text" name="smcs_code" value="{{ relatorio[19] if relatorio }}"></td>
+                                    <td><input type="text" name="grupo_part" value="{{ relatorio[20] if relatorio }}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Histórico do Reparo -->
+                <div class="form-section">
+                    <h3><i class="fas fa-clipboard-list"></i> Histórico do Reparo</h3>
+                    <div class="form-group">
+                        <label for="instrucoes">Instruções para execução</label>
+                        <textarea id="instrucoes" name="instrucoes">{{ relatorio[11] if relatorio }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="reclamacao">Reclamação do Cliente</label>
+                        <textarea id="reclamacao" name="reclamacao">{{ relatorio[12] if relatorio }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="causa">Causa das Falhas</label>
+                        <textarea id="causa" name="causa">{{ relatorio[13] if relatorio }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="dano">Dano Resultante</label>
+                        <textarea id="dano" name="dano">{{ relatorio[14] if relatorio }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="comentarios">Comentários</label>
+                        <textarea id="comentarios" name="comentarios">{{ relatorio[15] if relatorio }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Upload de fotos -->
+                <div class="photo-section">
+                    <h3><i class="fas fa-camera"></i> Fotos do Serviço</h3>
+                    <div class="photo-upload">
+                        <input type="file" id="photoInput" name="fotos" multiple accept="image/*">
+                        <div class="photo-gallery" id="photoGallery"></div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if editando %}Atualizar{% else %}Salvar{% endif %}
+                    </button>
+                    <a href="/listar" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Listar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    const photoInput = document.getElementById('photoInput');
+    const gallery = document.getElementById('photoGallery');
+
+    photoInput.addEventListener('change', (e) => {
+        gallery.innerHTML = ""; // limpa previews antigos
+        const files = Array.from(e.target.files);
+
+        files.forEach((file, index) => {
+            if (!file.type.startsWith("image/")) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const div = document.createElement('div');
+                div.classList.add('photo-item');
+                
+                // Adiciona delay na animação para cada foto
+                setTimeout(() => {
+                    div.style.animationDelay = `${index * 100}ms`;
+                }, 0);
+                
+                div.innerHTML = `
+                    <img src="${event.target.result}" alt="${file.name}">
+                    <div class="photo-name-container">
+                        <input type="text" 
+                               name="foto_nomes[]" 
+                               class="photo-name-input"
+                               placeholder="Digite o nome da imagem..." 
+                               required>
+                        <i class="fas fa-tag photo-name-icon"></i>
+                    </div>
+                    <button type="button" class="remove-btn" title="Remover imagem">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                div.querySelector('.remove-btn').addEventListener('click', () => {
+                    div.style.animation = 'slideOutDown 0.3s ease-in forwards';
+                    setTimeout(() => {
+                        div.remove();
+                        if (gallery.children.length === 0) {
+                            photoInput.value = "";
+                        }
+                    }, 300);
+                });
+
+                // Adicionar foco automático no campo de nome quando a imagem é carregada
+                const nameInput = div.querySelector('.photo-name-input');
+                setTimeout(() => {
+                    nameInput.focus();
+                }, 500);
+
+                gallery.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Adiciona animação de saída
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideOutDown {
+            to {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    </script>
+</body>
+</html>
