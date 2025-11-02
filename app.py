@@ -1,3 +1,5 @@
+import base64
+from io import BytesIO
 from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify, flash, make_response, send_from_directory
 from flask_weasyprint import HTML
 import sqlite3
@@ -283,7 +285,6 @@ def gerar_pdf(relatorio_id):
 
         pdf = HTML(string=html, base_url=request.base_url).write_pdf()
 
-        # usa número da OS como nome do arquivo
         num_os = relatorio[2] or f"OS_{relatorio_id}"
         num_os_safe = "".join(c if c.isalnum() else "_" for c in num_os)
 
@@ -330,7 +331,6 @@ def visualizar_pdf(relatorio_id):
         return f"Erro ao visualizar PDF: {str(e)}", 500
 
 
-# ----------------- ROTAS DE DEBUG -----------------
 @app.route("/debug_fotos/<int:relatorio_id>")
 def debug_fotos(relatorio_id):
     """Função para debugar problemas com fotos"""
@@ -424,7 +424,140 @@ def deletar_foto(foto_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/editar_foto/<int:foto_id>", methods=["POST"])
+def editar_foto(foto_id):
+    try:
+        data = request.get_json()
+        image_b64 = data.get("image")
 
+        if not image_b64:
+            return jsonify({"error": "Imagem não enviada"}), 400
+
+        # Buscar foto no banco
+        conn = sqlite3.connect(DB)
+        c = conn.cursor()
+        c.execute("SELECT caminho_arquivo FROM fotos_relatorio WHERE id = ?", (foto_id,))
+        resultado = c.fetchone()
+        conn.close()
+
+        if not resultado:
+            return jsonify({"error": "Foto não encontrada"}), 404
+
+        caminho_arquivo = os.path.join(UPLOAD_FOLDER, resultado[0])
+
+        # Decodificar base64 e salvar
+        header, encoded = image_b64.split(",", 1)
+        img_data = base64.b64decode(encoded)
+        img = Image.open(BytesIO(img_data))
+        img.save(caminho_arquivo, quality=85, optimize=True)
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/editar/<int:relatorio_id>", methods=["GET", "POST"])
+def editar(relatorio_id):
+    conn = sqlite3.connect(DB)
+    # Usar Row para facilitar o acesso por nome da coluna no template
+    conn.row_factory = sqlite3.Row 
+    c = conn.cursor()
+
+    if request.method == "POST":
+        # 1. ATUALIZAR DADOS DE TEXTO
+        dados = {
+            "cod_rev": request.form.get("cod_rev"),
+            "num_os": request.form.get("num_os"),
+            "cliente": request.form.get("cliente"),
+            "data": request.form.get("data"),
+            "tecnico": request.form.get("tecnico"),
+            "nivel": request.form.get("nivel"),
+            "contato": request.form.get("contato"),
+            "modelo": request.form.get("modelo"),
+            "prefixo": request.form.get("prefixo"),
+            "serie": request.form.get("serie"),
+            "instrucoes": request.form.get("instrucoes"),
+            "reclamacao": request.form.get("reclamacao"),
+            "causa": request.form.get("causa"),
+            "dano": request.form.get("dano"),
+            "comentarios": request.form.get("comentarios"),
+            "peca_numero": request.form.get("peca_numero"),
+            "falha_codigo": request.form.get("falha_codigo"),
+            "falha_qtd": request.form.get("falha_qtd"),
+            "smcs_code": request.form.get("smcs_code"),
+            "grupo_part": request.form.get("grupo_part"),
+            "comentarios_adicionais": request.form.get("comentarios_adicionais"),
+        }
+        
+        c.execute("""
+            UPDATE relatorios SET
+            cod_rev=?, num_os=?, cliente=?, data=?, tecnico=?, nivel=?, contato=?,
+            modelo=?, prefixo=?, serie=?, instrucoes=?, reclamacao=?, causa=?,
+            dano=?, comentarios=?, peca_numero=?, falha_codigo=?, falha_qtd=?,
+            smcs_code=?, grupo_part=?, comentarios_adicionais=?
+            WHERE id=?
+        """, (*dados.values(), relatorio_id))
+
+        # 2. REMOVER FOTOS MARCADAS
+        fotos_para_remover = request.form.getlist("remover_foto")
+        if fotos_para_remover:
+            for foto_id in fotos_para_remover:
+                # Buscar o nome do arquivo para deletar do disco
+                c.execute("SELECT caminho_arquivo FROM fotos_relatorio WHERE id=?", (foto_id,))
+                resultado = c.fetchone()
+                if resultado:
+                    caminho_arquivo = os.path.join(UPLOAD_FOLDER, resultado['caminho_arquivo'])
+                    if os.path.exists(caminho_arquivo):
+                        os.remove(caminho_arquivo)
+                
+                # Deletar do banco de dados
+                c.execute("DELETE FROM fotos_relatorio WHERE id=?", (foto_id,))
+
+        # 3. ADICIONAR NOVAS FOTOS (lógica similar à de 'salvar')
+        if "fotos" in request.files:
+            arquivos = request.files.getlist("fotos")
+            nomes_fotos = request.form.getlist("foto_nomes[]")
+
+            for idx, foto in enumerate(arquivos):
+                if foto.filename:
+                    titulo = nomes_fotos[idx] if idx < len(nomes_fotos) else "Sem título"
+                    filename = str(uuid.uuid4()) + os.path.splitext(foto.filename)[1].lower()
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    
+                    img = Image.open(foto)
+                    if img.mode in ('RGBA', 'LA'):
+                        background = Image.new('RGB', img.size, (255, 255, 255))
+                        background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                        img = background
+                    
+                    img.thumbnail((800, 600), Image.Resampling.LANCZOS)
+                    img.save(filepath, quality=85, optimize=True)
+                    
+                    c.execute("""
+                        INSERT INTO fotos_relatorio (relatorio_id, nome_arquivo, caminho_arquivo, titulo)
+                        VALUES (?, ?, ?, ?)
+                    """, (relatorio_id, filename, filename, titulo))
+
+        conn.commit()
+        conn.close()
+        flash("Relatório atualizado com sucesso!", "success")
+        return redirect(url_for("ver", relatorio_id=relatorio_id))
+
+    # --- Lógica para o método GET (carregar o formulário) ---
+    c.execute("SELECT * FROM relatorios WHERE id=?", (relatorio_id,))
+    relatorio = c.fetchone()
+    
+    if not relatorio:
+        conn.close()
+        flash("Relatório não encontrado!", "error")
+        return redirect(url_for("listar"))
+
+    fotos = buscar_fotos_seguro(relatorio_id)
+    conn.close()
+    
+    # Renderiza um novo template 'editar.html'
+    return render_template("editar.html", relatorio=relatorio, fotos=fotos)
+    
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)

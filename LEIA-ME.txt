@@ -1,0 +1,15 @@
+╔════════════════════════════════════════╗
+║   SOTREQ RNTO - Sistema de Relatórios  ║
+╚════════════════════════════════════════╝
+
+📋 COMO USAR:
+
+1. Clique duas vezes em "INICIAR.bat"
+2. Aguarde o sistema inicializar (primeira vez demora mais)
+3. Abra seu navegador em: http://localhost:5000
+4. Para fechar, volte na janela preta e pressione CTRL+C
+
+⚠️ IMPORTANTE:
+- Não feche a janela preta enquanto estiver usando
+- Mantenha esta pasta em local acessível para todos
+- Os relatórios ficam salvos na pasta "app"

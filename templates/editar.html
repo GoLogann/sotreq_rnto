@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Relatório #{{ relatorio['id'] }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Estilo base importado das outras páginas para consistência */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f1c40f 0%, #2c3e50 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #000 0%, #333 100%);
+            color: #f1c40f;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-container img {
+            height: 60px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+
+        /* Estilos específicos para o formulário de edição */
+        .form-container h1 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 2em;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #f39c12;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            font-size: 0.9em;
+        }
+        
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            padding: 0.8rem;
+            border: 1px solid #dee2e6;
+            background-color: #fdfdfd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #f1c40f;
+            box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.2);
+            outline: none;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .fotos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .foto-item {
+            position: relative;
+            text-align: center;
+        }
+        
+        .foto-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .foto-item label {
+            font-size: 0.9rem;
+            color: #c0392b;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background-color: #fdf2f2;
+            border-radius: 20px;
+        }
+        .foto-item input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 2rem;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+            color: black;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="/static/logo_sotreq.jpg" alt="Logo Sotreq">
+                <h1>RNTO - Relatório de Notas Técnicas</h1>
+                <img src="/static/Cat.png" alt="Logo CAT">
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="form-container">
+                <h1><i class="fas fa-edit"></i> Editar Relatório #{{ relatorio['id'] }}</h1>
+                
+                <form action="{{ url_for('editar', relatorio_id=relatorio['id']) }}" method="post" enctype="multipart/form-data">
+                    
+                    <div class="form-section">
+                        <h2><i class="fas fa-info-circle"></i> Informações Gerais e Equipamento</h2>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Cód./Rev.:</label><input type="text" name="cod_rev" value="{{ relatorio['cod_rev'] }}"></div>
+                            <div class="form-group"><label>Nº OS:</label><input type="text" name="num_os" value="{{ relatorio['num_os'] }}"></div>
+                            <div class="form-group"><label>Cliente:</label><input type="text" name="cliente" value="{{ relatorio['cliente'] }}"></div>
+                            <div class="form-group"><label>Data:</label><input type="text" name="data" value="{{ relatorio['data'] }}"></div>
+                            <div class="form-group"><label>Técnico:</label><input type="text" name="tecnico" value="{{ relatorio['tecnico'] }}"></div>
+                            <div class="form-group"><label>Nível:</label><input type="text" name="nivel" value="{{ relatorio['nivel'] }}"></div>
+                            <div class="form-group"><label>Contato:</label><input type="text" name="contato" value="{{ relatorio['contato'] }}"></div>
+                            <div class="form-group"><label>Modelo:</label><input type="text" name="modelo" value="{{ relatorio['modelo'] }}"></div>
+                            <div class="form-group"><label>Prefixo:</label><input type="text" name="prefixo" value="{{ relatorio['prefixo'] }}"></div>
+                            <div class="form-group"><label>Série:</label><input type="text" name="serie" value="{{ relatorio['serie'] }}"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2><i class="fas fa-clipboard-list"></i> Histórico do Reparo</h2>
+                        <div class="form-grid">
+                            <div class="form-group full-width"><label>Instruções:</label><textarea name="instrucoes">{{ relatorio['instrucoes'] }}</textarea></div>
+                            <div class="form-group full-width"><label>Reclamação do Cliente:</label><textarea name="reclamacao">{{ relatorio['reclamacao'] }}</textarea></div>
+                            <div class="form-group full-width"><label>Causa das Falhas:</label><textarea name="causa">{{ relatorio['causa'] }}</textarea></div>
+                            <div class="form-group full-width"><label>Dano Resultante:</label><textarea name="dano">{{ relatorio['dano'] }}</textarea></div>
+                            <div class="form-group full-width"><label>Comentários sobre o Processo:</label><textarea name="comentarios">{{ relatorio['comentarios'] }}</textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2><i class="fas fa-exclamation-triangle"></i> Informações da Falha</h2>
+                        <div class="form-grid">
+                            <div class="form-group"><label>Nº da Peça:</label><input type="text" name="peca_numero" value="{{ relatorio['peca_numero'] }}"></div>
+                            <div class="form-group"><label>Cód. Descrição da Falha:</label><input type="text" name="falha_codigo" value="{{ relatorio['falha_codigo'] }}"></div>
+                            <div class="form-group"><label>Quantidade:</label><input type="text" name="falha_qtd" value="{{ relatorio['falha_qtd'] }}"></div>
+                            <div class="form-group"><label>SMCS Code:</label><input type="text" name="smcs_code" value="{{ relatorio['smcs_code'] }}"></div>
+                            <div class="form-group"><label>Grupo Part Number:</label><input type="text" name="grupo_part" value="{{ relatorio['grupo_part'] }}"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h2><i class="fas fa-camera"></i> Gerenciar Fotos</h2>
+                        {% if fotos %}
+                        <div class="fotos-atuais">
+                            <h3>Fotos Atuais</h3>
+                            <div class="fotos-grid">
+                                {% for foto in fotos %}
+                                <div class="foto-item">
+                                    <img src="{{ url_for('uploads', filename=foto[2]) }}" alt="{{ foto[4] }}">
+                                    <label>
+                                        <input type="checkbox" name="remover_foto" value="{{ foto[0] }}">
+                                        Remover
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="form-group full-width" style="margin-top: 1.5rem;">
+                            <label>Adicionar Novas Fotos:</label>
+                            <input type="file" name="fotos" multiple>
+                        </div>
+                    </div>
+
+                    <div class="btn-container">
+                        <a href="{{ url_for('ver', relatorio_id=relatorio.id) }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
